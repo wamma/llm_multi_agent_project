@@ -1,25 +1,22 @@
+# agents/llm_adapter.py
 from openai import AsyncOpenAI
 import os
 
 
-class OpenAIWrapper:
-    def __init__(self, model_name: str):
-        self.model_name = model_name
-        self.client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# provider registry
+_PROVIDER: dict[str, type] = {}
 
-    async def generate(self, prompt: str) -> str:
-        response = await self.client.chat.completions.create(
-            model=self.model_name.replace("openai:", ""),
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return response.choices[0].message.content.strip()
+def register_provider(prefix: str, wrapper_cls: type):
+    _PROVIDER[prefix] = wrapper_cls
 
 class LLMAdapter:
     def __init__(self, model_name: str):
-        if model_name.startswith("openai"):
-            self.engine = OpenAIWrapper(model_name)
-        else:
-            raise ValueError(f"Unsupported model provider: {model_name}")
+        # model_name 예시: "openai:gpt-3.5-turbo"
+        prefix, _, real_name = model_name.partition(":")
+        Wrapper = _PROVIDER.get(prefix)
+        if not Wrapper:
+            raise ValueError(f"Unsupported provider: {prefix}")
+        self.engine = Wrapper(real_name)
 
     async def generate(self, prompt: str) -> str:
         return await self.engine.generate(prompt)

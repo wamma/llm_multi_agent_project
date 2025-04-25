@@ -1,0 +1,10 @@
+# config/tasks.yaml
+
+# 필요한 만큼 task를 추가하세요:
+# sentiment:
+#   template: "이 문장의 감정분석 결과를 JSON으로 알려줘:\n{text}"
+
+summarize:
+  template: "다음 내용을 한 문장으로 요약해줘:\n\n{input}"
+translate:
+  template: "Translate the following to {target_lang}:\n{input}"
